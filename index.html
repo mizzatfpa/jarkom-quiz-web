@@ -1,0 +1,678 @@
+<!--
+  CARA DEPLOY KE GITHUB PAGES (GRATIS):
+  1. Buat repository baru di github.com (boleh private atau public)
+  2. Upload file index.html ini ke repository tersebut
+  3. Pergi ke Settings > Pages
+  4. Pilih Source: "Deploy from a branch"
+  5. Pilih Branch: main (atau master), folder: / (root)
+  6. Klik Save — tunggu 1-2 menit
+  7. Website live di: https://<username>.github.io/<repo-name>/
+
+  Tidak perlu npm, tidak perlu build step, tidak perlu server.
+  Cukup satu file index.html.
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jarkom Quiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Plus+Jakarta+Sans:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #222536;
+      --accent:    #6c63ff;
+      --accent2:   #48cfad;
+      --correct:   #2ecc71;
+      --wrong:     #e74c3c;
+      --text:      #e8eaf0;
+      --text-muted:#8b91a8;
+      --border:    #2e3347;
+      --radius:    12px;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .view {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    button {
+      font-family: 'Inter', sans-serif;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    button:hover {
+      box-shadow: 0 4px 12px rgba(108, 99, 255, 0.2);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+    }
+
+    .badge {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 8px 0;
+      display: block;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 20px;
+      background: var(--surface);
+      padding: 16px;
+      border-radius: var(--radius);
+      margin-top: 24px;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: bold;
+      color: var(--accent2);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      background: var(--surface);
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .option-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 12px;
+      border-radius: 30px;
+      padding: 16px 24px;
+    }
+
+    .option-btn.correct {
+      background: var(--correct);
+      border-color: var(--correct);
+      color: #fff;
+    }
+
+    .option-btn.wrong {
+      background: var(--wrong);
+      border-color: var(--wrong);
+      color: #fff;
+    }
+
+    .explanation-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 24px;
+      display: none;
+    }
+
+    .explanation-panel.show {
+      display: block;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .timer-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: var(--surface2);
+      margin-top: -24px;
+      margin-bottom: 24px;
+    }
+
+    .timer-bar-fill {
+      height: 100%;
+      background: var(--accent2);
+      width: 100%;
+    }
+
+    .timer-bar-fill.danger {
+      background: var(--wrong);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- View 1: Home -->
+    <div id="view-home" class="view active">
+      <h1 style="font-size: 3rem; margin-bottom: 8px; text-align: center; color: var(--accent);">Jarkom Quiz</h1>
+      <p style="text-align: center; color: var(--text-muted); font-size: 1.2rem;">Latihan Soal Jaringan Komputer</p>
+      
+      <div class="stats-bar" style="justify-content: center; margin-bottom: 40px;">
+        <div class="stat-item">
+          <span class="stat-value" id="stat-questions">0</span>
+          <span>Soal</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-chapters">0</span>
+          <span>Chapter</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-topics">0</span>
+          <span>Topik</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 16px; justify-content: center;">
+        <button class="primary" onclick="navigate('browse')">Belajar per Topik</button>
+        <button onclick="navigate('quiz-setup')">Quiz Mode</button>
+      </div>
+    </div>
+
+    <!-- View 2: Browse -->
+    <div id="view-browse" class="view">
+      <button onclick="navigate('home')" style="margin-bottom: 24px;">← Kembali</button>
+      <h2>Topik Pembelajaran</h2>
+      
+      <div class="tabs" id="chapter-tabs" style="margin-top: 24px;">
+        <!-- Tabs will be generated here -->
+      </div>
+
+      <div class="grid" id="topics-grid">
+        <!-- Topic cards will be generated here -->
+      </div>
+    </div>
+
+    <!-- View: Topic Detail -->
+    <div id="view-topic-detail" class="view">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <button onclick="navigate('browse')">← Kembali ke Topik</button>
+        <div id="topic-detail-progress" style="color: var(--text-muted);">Soal 1 dari 10</div>
+      </div>
+      
+      <h3 id="topic-detail-question" style="margin-bottom: 24px; font-weight: 500; line-height: 1.5;"></h3>
+      
+      <div id="topic-detail-options">
+        <!-- Options generated here -->
+      </div>
+
+      <div id="topic-detail-explanation" class="explanation-panel">
+        <h4 style="margin-bottom: 12px; color: var(--accent2);">Penjelasan</h4>
+        <div id="topic-detail-explanation-content" style="color: var(--text-muted); line-height: 1.5; font-size: 0.95rem;"></div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 24px;">
+        <button id="topic-detail-next-btn" class="primary" style="display: none;" onclick="nextTopicQuestion()">Soal Berikutnya →</button>
+      </div>
+    </div>
+
+    <!-- View: Quiz Setup -->
+    <div id="view-quiz-setup" class="view">
+      <button onclick="navigate('home')" style="margin-bottom: 24px;">← Kembali</button>
+      <h2>Quiz Mode</h2>
+      
+      <div class="card" style="margin-top: 24px;">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Pilih Chapter</label>
+          <select id="quiz-filter-chapter" style="width: 100%; padding: 12px; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius);">
+            <option value="all">Semua Chapter</option>
+            <option value="Ch01">Ch01</option>
+            <option value="Ch02">Ch02</option>
+          </select>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 8px;">Jumlah Soal</label>
+          <input type="number" id="quiz-filter-count" value="10" min="5" max="30" style="width: 100%; padding: 12px; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius);">
+        </div>
+
+        <button class="primary" style="width: 100%; margin-top: 16px;" onclick="startQuiz()">Mulai Quiz</button>
+      </div>
+    </div>
+
+    <!-- View: Quiz Screen -->
+    <div id="view-quiz" class="view">
+      <div class="timer-bar-bg">
+        <div id="quiz-timer-fill" class="timer-bar-fill"></div>
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 id="quiz-progress-text">1 / 10</h3>
+        <div id="quiz-timer-text" style="font-weight: bold; color: var(--accent2);">30s</div>
+      </div>
+
+      <div class="progress-bar-bg">
+        <div id="quiz-progress-bar" class="progress-bar-fill"></div>
+      </div>
+      
+      <h3 id="quiz-question" style="margin: 32px 0; font-weight: 500; line-height: 1.5; font-size: 1.2rem;"></h3>
+      
+      <div id="quiz-options">
+        <!-- Options generated here -->
+      </div>
+    </div>
+
+    <!-- View: Results -->
+    <div id="view-results" class="view">
+      <h2 style="text-align: center;">Hasil Quiz</h2>
+      
+      <div class="card" style="text-align: center; margin: 32px 0;">
+        <div id="result-score" style="font-size: 3rem; font-family: 'Plus Jakarta Sans'; color: var(--accent); margin-bottom: 8px;"></div>
+        <div id="result-label" style="font-size: 1.2rem; color: var(--accent2); margin-bottom: 24px;"></div>
+        
+        <div style="display: flex; justify-content: center; gap: 16px;">
+          <button class="primary" onclick="navigate('quiz-setup')">Ulangi Quiz</button>
+          <button onclick="navigate('home')">Kembali ke Menu</button>
+        </div>
+      </div>
+
+      <h3>Detail Soal</h3>
+      <div id="result-breakdown" style="margin-top: 16px;">
+        <!-- Breakdown table generated here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Placeholder data corresponding to the prompt schema
+    const questionsData = [
+      {
+        id: 1,
+        chapter: "Ch01",
+        topic: "End Systems & Network Core",
+        difficulty: "basic",
+        question: "Perangkat manakah yang bukan merupakan end system (host)?",
+        options: { A: "Smartphone", B: "Laptop", C: "Router", D: "Web Server", E: "Smart TV" },
+        answer: "C",
+        explanations: {
+          A: "Salah. Smartphone adalah end system.",
+          B: "Salah. Laptop adalah end system.",
+          C: "Benar. Router bukan end system, melainkan perangkat network core.",
+          D: "Salah. Web Server adalah end system (host).",
+          E: "Salah. Smart TV adalah end system."
+        },
+        generalExplanation: "End systems (host) terletak di pinggir (edge) dari jaringan, sementara router berada di inti (core) jaringan untuk meneruskan paket."
+      },
+      {
+        id: 2,
+        chapter: "Ch02",
+        topic: "HTTP & Web",
+        difficulty: "intermediate",
+        question: "Jika sebuah halaman web berisi 10 gambar kecil dan menggunakan non-persistent HTTP tanpa pipelining, berapa banyak koneksi TCP yang dibuat?",
+        options: { A: "1", B: "10", C: "11", D: "20", E: "22" },
+        answer: "C",
+        explanations: {
+          A: "Salah.",
+          B: "Salah.",
+          C: "Benar. 1 koneksi untuk HTML base file, dan 10 koneksi untuk masing-masing gambar.",
+          D: "Salah.",
+          E: "Salah."
+        },
+        generalExplanation: "Pada non-persistent HTTP, setiap objek web membutuhkan koneksi TCP baru. Sehingga untuk 1 file base + 10 objek eksternal, dibutuhkan 11 koneksi TCP."
+      }
+    ];
+
+    const state = {
+      view: 'home',
+      selectedChapter: 'Ch01',
+      selectedTopic: null,
+      browseQuestions: [],
+      browseIndex: 0,
+
+      quizQuestions: [],
+      quizIndex: 0,
+      quizAnswers: [],
+      quizTimer: null,
+      quizTimeLeft: 30,
+    };
+
+    function render() {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`view-${state.view}`).classList.add('active');
+
+      if (state.view === 'home') renderHome();
+      else if (state.view === 'browse') renderBrowse();
+      else if (state.view === 'topic-detail') renderTopicDetail();
+      else if (state.view === 'quiz') renderQuiz();
+      else if (state.view === 'results') renderResults();
+    }
+
+    function navigate(view, params = {}) {
+      Object.assign(state, params);
+      state.view = view;
+      if(view === 'home') { clearInterval(state.quizTimer); }
+      render();
+    }
+
+    function renderHome() {
+      document.getElementById('stat-questions').innerText = questionsData.length;
+      document.getElementById('stat-chapters').innerText = new Set(questionsData.map(q => q.chapter)).size;
+      document.getElementById('stat-topics').innerText = new Set(questionsData.map(q => q.topic)).size;
+    }
+
+    function renderBrowse() {
+      const chapters = [...new Set(questionsData.map(q => q.chapter))].sort();
+      const tabs = document.getElementById('chapter-tabs');
+      tabs.innerHTML = chapters.map(ch => 
+        `<div class="tab ${ch === state.selectedChapter ? 'active' : ''}" onclick="selectChapter('${ch}')">${ch}</div>`
+      ).join('');
+
+      const topicsGrid = document.getElementById('topics-grid');
+      const filtered = questionsData.filter(q => q.chapter === state.selectedChapter);
+      
+      const topicStats = {};
+      filtered.forEach(q => {
+        if (!topicStats[q.topic]) topicStats[q.topic] = { total: 0, basic: 0, intermediate: 0, advanced: 0 };
+        topicStats[q.topic].total++;
+        if (topicStats[q.topic][q.difficulty] !== undefined) topicStats[q.topic][q.difficulty]++;
+      });
+
+      topicsGrid.innerHTML = Object.entries(topicStats).map(([topic, stats]) => `
+        <div class="card">
+          <h3 style="font-size: 1.1rem; margin-bottom: 8px;">${topic}</h3>
+          <span class="badge">${stats.total} Soal</span>
+          <span class="badge" style="font-size: 0.75rem;">${stats.basic} basic · ${stats.intermediate} inter · ${stats.advanced} adv</span>
+          <button class="primary" style="margin-top: 16px; width: 100%;" onclick="openTopic('${topic}')">Pelajari</button>
+        </div>
+      `).join('');
+    }
+
+    function selectChapter(ch) {
+      state.selectedChapter = ch;
+      renderBrowse();
+    }
+
+    function openTopic(topic) {
+      state.selectedTopic = topic;
+      state.browseQuestions = questionsData.filter(q => q.topic === topic);
+      state.browseIndex = 0;
+      navigate('topic-detail');
+    }
+
+    function renderTopicDetail() {
+      const q = state.browseQuestions[state.browseIndex];
+      document.getElementById('topic-detail-progress').innerText = `Soal ${state.browseIndex + 1} dari ${state.browseQuestions.length}`;
+      document.getElementById('topic-detail-question').innerText = q.question;
+      
+      const optionsContainer = document.getElementById('topic-detail-options');
+      optionsContainer.innerHTML = Object.entries(q.options).map(([key, val]) => `
+        <button class="option-btn" onclick="selectBrowseOption('${key}')">
+          <span style="font-weight: bold; margin-right: 8px;">${key}.</span> ${val}
+        </button>
+      `).join('');
+      
+      const explanationPanel = document.getElementById('topic-detail-explanation');
+      explanationPanel.classList.remove('show');
+      document.getElementById('topic-detail-next-btn').style.display = 'none';
+      
+      // Update explanation content ahead of time but hide it
+      document.getElementById('topic-detail-explanation-content').innerHTML = `
+        <div style="margin-bottom: 12px;"><strong>Konsep Umum:</strong> ${q.generalExplanation}</div>
+        <ul style="padding-left: 20px; list-style-type: none; margin: 0; padding: 0;">
+          ${Object.entries(q.explanations).map(([k, v]) => `
+            <li style="margin-bottom: 8px;"><strong>${k}:</strong> ${v}</li>
+          `).join('')}
+        </ul>
+      `;
+    }
+
+    function selectBrowseOption(key) {
+      const q = state.browseQuestions[state.browseIndex];
+      const btns = document.querySelectorAll('#topic-detail-options .option-btn');
+      
+      btns.forEach((btn, idx) => {
+        btn.disabled = true;
+        const btnKey = Object.keys(q.options)[idx];
+        if (btnKey === q.answer) {
+          btn.classList.add('correct');
+          btn.innerHTML += ' &#10003;';
+        } else if (btnKey === key && key !== q.answer) {
+          btn.classList.add('wrong');
+          btn.innerHTML += ' &times;';
+        }
+      });
+      
+      document.getElementById('topic-detail-explanation').classList.add('show');
+      if (state.browseIndex < state.browseQuestions.length - 1) {
+        document.getElementById('topic-detail-next-btn').style.display = 'block';
+      }
+    }
+
+    function nextTopicQuestion() {
+      state.browseIndex++;
+      renderTopicDetail();
+    }
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startQuiz() {
+      const chapter = document.getElementById('quiz-filter-chapter').value;
+      const count = parseInt(document.getElementById('quiz-filter-count').value);
+      
+      let pool = questionsData;
+      if (chapter !== 'all') {
+        pool = pool.filter(q => q.chapter === chapter);
+      }
+      
+      state.quizQuestions = shuffle(pool).slice(0, count);
+      if (state.quizQuestions.length === 0) {
+        alert("Tidak ada soal untuk kriteria ini!");
+        return;
+      }
+      
+      state.quizIndex = 0;
+      state.quizAnswers = [];
+      navigate('quiz');
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(state.quizTimer);
+      state.quizTimeLeft = 30;
+      updateTimerUI();
+      
+      state.quizTimer = setInterval(() => {
+        state.quizTimeLeft -= 0.1;
+        updateTimerUI();
+        
+        if (state.quizTimeLeft <= 0) {
+          clearInterval(state.quizTimer);
+          submitQuizAnswer(null);
+        }
+      }, 100);
+    }
+    
+    function updateTimerUI() {
+      const fill = document.getElementById('quiz-timer-fill');
+      const text = document.getElementById('quiz-timer-text');
+      
+      const pct = (state.quizTimeLeft / 30) * 100;
+      fill.style.width = \`\${Math.max(0, pct)}%\`;
+      text.innerText = \`\${Math.ceil(state.quizTimeLeft)}s\`;
+      
+      if (state.quizTimeLeft <= 10) fill.classList.add('danger');
+      else fill.classList.remove('danger');
+    }
+
+    function renderQuiz() {
+      const q = state.quizQuestions[state.quizIndex];
+      document.getElementById('quiz-progress-text').innerText = \`\${state.quizIndex + 1} / \${state.quizQuestions.length}\`;
+      document.getElementById('quiz-progress-bar').style.width = \`\${((state.quizIndex) / state.quizQuestions.length) * 100}%\`;
+      
+      document.getElementById('quiz-question').innerText = q.question;
+      
+      const optionsContainer = document.getElementById('quiz-options');
+      optionsContainer.innerHTML = Object.entries(q.options).map(([key, val]) => `
+        <button class="option-btn" onclick="submitQuizAnswer('${key}')">
+          <span style="font-weight: bold; margin-right: 8px;">${key}.</span> ${val}
+        </button>
+      `).join('');
+    }
+
+    function submitQuizAnswer(key) {
+      clearInterval(state.quizTimer);
+      const q = state.quizQuestions[state.quizIndex];
+      const isCorrect = key === q.answer;
+      
+      state.quizAnswers.push({
+        questionId: q.id,
+        selected: key,
+        correct: q.answer,
+        isCorrect: isCorrect
+      });
+
+      const btns = document.querySelectorAll('#quiz-options .option-btn');
+      btns.forEach((btn, idx) => {
+        btn.disabled = true;
+        const btnKey = Object.keys(q.options)[idx];
+        if (btnKey === q.answer) {
+          btn.classList.add('correct');
+        } else if (btnKey === key && !isCorrect) {
+          btn.classList.add('wrong');
+        }
+      });
+      
+      setTimeout(() => {
+        state.quizIndex++;
+        if (state.quizIndex >= state.quizQuestions.length) {
+          navigate('results');
+        } else {
+          renderQuiz();
+          startTimer();
+        }
+      }, 1500);
+    }
+
+    function renderResults() {
+      const correctCount = state.quizAnswers.filter(a => a.isCorrect).length;
+      const total = state.quizAnswers.length;
+      const pct = (correctCount / total) * 100;
+      
+      document.getElementById('result-score').innerText = \`\${correctCount} / \${total} Benar\`;
+      
+      let label = "Perlu Belajar Lagi";
+      if (pct >= 80) label = "Luar Biasa!";
+      else if (pct >= 50) label = "Cukup Baik";
+      
+      document.getElementById('result-label').innerText = \`\${label} (\${Math.round(pct)}%)\`;
+      
+      const breakdown = document.getElementById('result-breakdown');
+      breakdown.innerHTML = state.quizAnswers.map((ans, idx) => {
+        const q = state.quizQuestions[idx];
+        return `
+          <div class="card" style="margin-bottom: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--\${ans.isCorrect ? 'correct' : 'wrong'})">
+            <div>
+              <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 4px;">Soal \${idx + 1} &middot; \${q.topic}</div>
+              <div style="font-weight: 500;">\${q.question}</div>
+            </div>
+            <div style="text-align: right; min-width: 80px;">
+              <span style="font-weight: bold; color: var(--\${ans.isCorrect ? 'correct' : 'wrong'})">
+                \${ans.isCorrect ? '&#10003; Benar' : '&times; Salah'}
+              </span>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Kunci: \${q.answer}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Initialize
+    render();
+  </script>
+</body>
+</html>
