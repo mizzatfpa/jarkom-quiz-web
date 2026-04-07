@@ -582,8 +582,8 @@
       const text = document.getElementById('quiz-timer-text');
       
       const pct = (state.quizTimeLeft / 30) * 100;
-      fill.style.width = \`\${Math.max(0, pct)}%\`;
-      text.innerText = \`\${Math.ceil(state.quizTimeLeft)}s\`;
+      fill.style.width = `${Math.max(0, pct)}%`;
+      text.innerText = `${Math.ceil(state.quizTimeLeft)}s`;
       
       if (state.quizTimeLeft <= 10) fill.classList.add('danger');
       else fill.classList.remove('danger');
@@ -591,8 +591,8 @@
 
     function renderQuiz() {
       const q = state.quizQuestions[state.quizIndex];
-      document.getElementById('quiz-progress-text').innerText = \`\${state.quizIndex + 1} / \${state.quizQuestions.length}\`;
-      document.getElementById('quiz-progress-bar').style.width = \`\${((state.quizIndex) / state.quizQuestions.length) * 100}%\`;
+      document.getElementById('quiz-progress-text').innerText = `${state.quizIndex + 1} / ${state.quizQuestions.length}`;
+      document.getElementById('quiz-progress-bar').style.width = `${((state.quizIndex) / state.quizQuestions.length) * 100}%`;
       
       document.getElementById('quiz-question').innerText = q.question;
       
@@ -643,28 +643,28 @@
       const total = state.quizAnswers.length;
       const pct = (correctCount / total) * 100;
       
-      document.getElementById('result-score').innerText = \`\${correctCount} / \${total} Benar\`;
+      document.getElementById('result-score').innerText = `${correctCount} / ${total} Benar`;
       
       let label = "Perlu Belajar Lagi";
       if (pct >= 80) label = "Luar Biasa!";
       else if (pct >= 50) label = "Cukup Baik";
       
-      document.getElementById('result-label').innerText = \`\${label} (\${Math.round(pct)}%)\`;
+      document.getElementById('result-label').innerText = `${label} (${Math.round(pct)}%)`;
       
       const breakdown = document.getElementById('result-breakdown');
       breakdown.innerHTML = state.quizAnswers.map((ans, idx) => {
         const q = state.quizQuestions[idx];
         return `
-          <div class="card" style="margin-bottom: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--\${ans.isCorrect ? 'correct' : 'wrong'})">
+          <div class="card" style="margin-bottom: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--${ans.isCorrect ? 'correct' : 'wrong'})">
             <div>
-              <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 4px;">Soal \${idx + 1} &middot; \${q.topic}</div>
-              <div style="font-weight: 500;">\${q.question}</div>
+              <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 4px;">Soal ${idx + 1} &middot; ${q.topic}</div>
+              <div style="font-weight: 500;">${q.question}</div>
             </div>
             <div style="text-align: right; min-width: 80px;">
-              <span style="font-weight: bold; color: var(--\${ans.isCorrect ? 'correct' : 'wrong'})">
-                \${ans.isCorrect ? '&#10003; Benar' : '&times; Salah'}
+              <span style="font-weight: bold; color: var(--${ans.isCorrect ? 'correct' : 'wrong'})">
+                ${ans.isCorrect ? '&#10003; Benar' : '&times; Salah'}
               </span>
-              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Kunci: \${q.answer}</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Kunci: ${q.answer}</div>
             </div>
           </div>
         `;
